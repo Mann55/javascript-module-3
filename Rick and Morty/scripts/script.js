@@ -1,56 +1,99 @@
-//https://rickandmortyapi.com/api/episode
+// getting root div
+const rootDiv = document.getElementById("root");
 
-/***************  1.2 Web structure  ***************/
+// creating divs
+const asideDiv = document.createElement("div");
+const contentDiv = document.createElement("div");
+const mainDiv = document.createElement("div");
 
-/* 1.21 Header : It contains Project Title */
+// creating classes
+asideDiv.classList.add("aside");
+contentDiv.classList.add("content");
+mainDiv.classList.add("main");
 
-/** HEADER **/
-function headerDisplay() {
-  let div = document.createElement("div");
-  let h2 = document.createElement("H2");
-  let txt = document.createTextNode("Rick and Morty API");
+// creating button to load more episodes
+const loadMoreEpisodesBtn = document.createElement("button");
+loadMoreEpisodesBtn.textContent = "Load More Episodes";
+asideDiv.appendChild(loadMoreEpisodesBtn);
 
-  div.classList.add("listItem");
-  h2.classList.add("mm");
-  div.appendChild(h2);
+// appending divs
+mainDiv.appendChild(asideDiv);
+mainDiv.appendChild(contentDiv);
+rootDiv.appendChild(mainDiv);
 
-  h2.appendChild(txt);
-  document.body.appendChild(h2);
-}
-headerDisplay();
+// fething data from api
+let urlEpisodes = "https://rickandmortyapi.com/api/episode";
 
-/** Episodes **/
+// function to load episodes
+const loadEpisodes = async () => {
+  const response = await fetch(urlEpisodes);
+  const data = await response.json();
+  //console.log(data.info.next);
+  //console.log(data.results);
+  urlEpisodes = data.info.next;
+  showEpisodes(data.results);
+};
 
-function g() {
-  const urlEpisodes = "https://rickandmortyapi.com/api/episode";
-  fetch(urlEpisodes)
-    .then((episode) => episode.json())
-    .then((episodeObject) => {
-      //  console.log(episodeObject.results);
-      chaptersInfo(episodeObject);
-      ShowEpisodeInfo(episodeObject);
+// function to load more episodes
+const showEpisodes = (data) => {
+  const fragment = document.createDocumentFragment();
+  for (let i = 0; i < data.length; i++) {
+    //console.log(data[i].episode);
+    const btn = document.createElement("button");
+    btn.textContent = data[i].episode;
+    // creating add event listener for get more details baout episodes
+    btn.addEventListener("click", () => {
+      printEpisodeContent(data[i]);
     });
-}
+    fragment.appendChild(btn);
+  }
+  asideDiv.appendChild(fragment);
+};
 
-function chaptersInfo(episodeObject) {
-  episodeObject.results.forEach((episode) => {
-    //console.log(episode.name);
-    const root = document.querySelector("#root");
-    const ul = document.createElement("ul");
-    const li = document.createElement("li");
-    root.classList.add("root-list");
-    ul.classList.add("ul-list");
-    root.appendChild(ul);
-    ul.appendChild(li);
-    li.innerHTML = "<a onclick='ShowEpisodeInfo()'>Episodes</a>";
-    //  episode.name + "  " + episode.air_date + " " + episode.episode;
-  });
-}
+// function to create the content of episodes
+const printEpisodeContent = (data) => {
+  //  console.log(data.name);
+  const episodeDataFragment = document.createDocumentFragment();
 
-function ShowEpisodeInfo(episodeObject) {
-  console.log("hiii");
-  episodeObject.results.forEach((episode) => {
-    console.log(episode.name);
-  });
-}
-g();
+  const title = document.createElement("h2");
+  title.textContent = data.name;
+  const date = document.createElement("p");
+  date.textContent = data.air_date;
+
+  episodeDataFragment.appendChild(title);
+  episodeDataFragment.appendChild(date);
+
+  contentDiv.innerHTML = "";
+  contentDiv.appendChild(episodeDataFragment);
+
+  episodeCards(data);
+};
+
+// card to show the data of episodes characters
+const episodeCards = async (data) => {
+  //console.log(data);
+  const characters = data.characters;
+  //console.log(characters);
+  const wrapperCards = document.createElement("div");
+  wrapperCards.classList.add("cards");
+  for (let i = 0; i < characters.length; i++) {
+    const response = await fetch(characters[i]);
+    const charactersData = await response.json();
+    console.log(charactersData);
+
+    const card = document.createElement("div");
+    card.classList.add("card");
+    const image = document.createElement("img");
+    image.classList.add("card-image");
+    image.src = charactersData.image;
+    const name = document.createElement("p");
+    name.textContent = charactersData.name;
+    card.appendChild(image);
+    card.appendChild(name);
+    wrapperCards.appendChild(card);
+  }
+  contentDiv.appendChild(wrapperCards);
+};
+
+window.addEventListener("DOMContentLoaded", loadEpisodes);
+loadMoreEpisodesBtn.addEventListener("click", loadEpisodes);
